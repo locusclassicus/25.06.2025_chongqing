@@ -1,0 +1,196 @@
+---
+title: "Mapping Platonic Scholarship in Scopus"
+subtitle: "A Bird’s-Eye View"
+author: Olga Alieva
+date: 2025-06-25
+lang: en
+format: 
+  clean-revealjs:
+    incremental: true 
+    scrollable: true
+echo: false
+message: false
+df-print: paged
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+theme_set(theme_minimal())
+```
+
+## What's this all about
+
+- This paper presents an exploratory analysis of the global distribution and publication trends in Platonic scholarship
+
+- It is based on open-access metadata retrieved mainly (but not exclusively!) through the Scopus API (Application Programming Interface = a connection between computer programs)
+
+- Scopus is a comprehensive abstract and citation database launched by Elsevier in 2004 to provide researchers and institutions with a tool to access scientific literature, track citations, and assess research impact across disciplines.
+
+## Limitations
+
+- While Scopus is one of the most extensive citation databases available, it is not neutral or exhaustive — especially when it comes to humanities disciplines like philosophy.
+
+- The database prioritizes English-language publications and journals indexed after 2004, leading to the underrepresentation of non-English, historical, and specialized venues for Platonic scholarship.
+
+- Many important works in classical philology or philosophy may appear in sources not indexed by Scopus, or may be published in books, edited volumes, or older journals excluded from its coverage.
+
+## Nevertheless...
+
+- Scopus offers a useful proxy for identifying broad patterns in the contemporary dissemination of Platonic research.
+- It helps to quantify global trends in academic publishing and to visualize key features of Platonic scholarship.
+- Scopus also facilitates a macroscopic, data-driven approach to the field of Plato studies.
+
+## The dataset
+
+- This research draws on about 7,500 publications indexed in Scopus that include Plato as a subject (based on title or key words).
+- It was collected using programmatic tools in R — specifically the `{rscopus}`, `{rcrossref}`, `{openalexR}` packages and LLM via `{ellmer}`.
+- Dataset includes data on authorship, national affiliation and information on publishers, including their location.
+
+
+## A Preview of the Dataset
+
+```{r}
+library(gt)
+library(tidyverse)
+
+load("./data/plato_pub_ed.Rdata")
+plato_pub_ed <- plato_pub_ed |> 
+  rename(publisher_country = country) |> 
+  mutate(cited_by_count = as.numeric(cited_by_count))
+
+set.seed(123)
+plato_pub_ed |> 
+  sample_n(size = 10) |> 
+  gt()
+```
+
+
+## Nr. of Publications on Plato in Scopus
+
+
+```{r}
+plato_pub_ed |> 
+  ggplot(aes(year, fill = aggregation_type)) + 
+  geom_bar() +
+  scale_fill_viridis_d("")
+
+```
+
+::: {.notes}
+- Before 1950, the number of publications (mainly journals) was quite low.
+
+- Starting around the 1970s, there's a marked and rapid increase in publications - both in journals and books.
+
+- The number of publications appears to peak between 1990 and 2010, with annual publication counts exceeding 400 in some years.
+:::
+
+## Top Affiliation Countries 
+
+
+```{r}
+plato_pub_ed |> 
+  filter(!is.na(affiliation_country)) |> 
+  count(affiliation_country) |> 
+  arrange(-n)
+
+```
+
+# Part I: Texts and Scholars 
+
+## What are the most cited publications?
+
+```{r}
+plato_pub_ed |> 
+  arrange(-cited_by_count) |> 
+  filter(affiliation_name != "Neuroscience") |>  # irrelevant
+  slice_head(n = 10) |> 
+  select(-issn, -eIssn, -volume, -issue, -page_range, -doi, -subtype) |> 
+  mutate(id = paste(creator, title), .before = publicationName) |> 
+  select(-title, -creator, -publicationName, affiliation_city)
+```
+
+::: {.notes}
+
+- Christine Marion Korsgaard is an American philosopher (Harvard University) specialized in moral philosophy 
+- Only books here!
+- note the University of Crete
+
+:::
+
+## What about journal articles? 
+
+```{r}
+plato_pub_ed |> 
+  arrange(-cited_by_count) |>  
+  filter(subtype == "ar" & publisher != "BMJ") |>   # remove a medical publication
+  slice_head(n = 10) |> 
+  select(-issn, -eIssn, -volume, -issue, -page_range, -doi, -subtype) |> 
+  mutate(id = paste(creator, title), .before = publicationName) |> 
+  select(-title, -creator, affiliation_city, affiliation_country, -aggregation_type)
+```
+
+::: {.notes}
+
+- J. Annas three times!
+- Note that all the publications are earlier than 1991
+
+:::
+
+## Who are the most cited authors (books excluded) ?
+
+```{r}
+plato_pub_ed |> 
+  filter(subtype == "ar") |> 
+  group_by(creator) |> 
+  summarise(total_counts = sum(cited_by_count)) |> 
+  arrange(-total_counts) |> 
+  filter(!is.na(creator) & creator != "Ives J.") |> 
+  slice_head(n = 10)
+```
+
+## Top 10 Institutions by Total Citations of Plato Journal Articles
+
+```{r}
+plato_pub_ed |> 
+  filter(subtype == "ar" & !is.na(affiliation_name)) |> 
+  group_by(affiliation_name) |> 
+  summarise(total_counts = sum(cited_by_count)) |> 
+  arrange(-total_counts) |> 
+  slice_head(n = 10) |> 
+  ggplot(aes(x = total_counts, y = reorder(affiliation_name, total_counts), fill = total_counts)) +
+  geom_col(show.legend = FALSE) +
+  scale_fill_viridis_c(option = "viridis", direction = -1) +
+  labs(
+    x = "Total Citations",
+    y = ""
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    axis.title.y = element_text(margin = margin(r = 10))
+  )
+```
+
+## International Participation over Time
+
+![](plato_publications.mp4)
+
+## International Citation over Time
+
+## Part I: Conclusions
+
+- In recent years, there has been a noticeable rise in the number of authors listing affiliations with the Global South and Russia, moving beyond the traditional dominance of Europe and the USA.
+
+- In terms of visibility and citation impact, these affiliations still lag behind traditional centers such as Oxford and Harvard; however, this trend is gradually changing.
+
+
+# Part II: Journals
+
+## Part II: Conclusions
+
+# Part III: Publishers
+
+## Part III: Perspectives
+
+
+
