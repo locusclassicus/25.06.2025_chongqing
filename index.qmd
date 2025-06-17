@@ -18,7 +18,7 @@ library(ggplot2)
 theme_set(theme_minimal())
 ```
 
-## What's this all about
+## 1. What's this all about
 
 - This paper presents an exploratory analysis of the global distribution and publication trends in Platonic scholarship
 
@@ -26,7 +26,7 @@ theme_set(theme_minimal())
 
 - Scopus is a comprehensive abstract and citation database launched by Elsevier in 2004 to provide researchers and institutions with a tool to access scientific literature, track citations, and assess research impact across disciplines.
 
-## Limitations
+## 2. Limitations
 
 - While Scopus is one of the most extensive citation databases available, it is not neutral or exhaustive — especially when it comes to humanities disciplines like philosophy.
 
@@ -34,20 +34,20 @@ theme_set(theme_minimal())
 
 - Many important works in classical philology or philosophy may appear in sources not indexed by Scopus, or may be published in books, edited volumes, or older journals excluded from its coverage.
 
-## Nevertheless...
+## 3. Nevertheless...
 
 - Scopus offers a useful proxy for identifying broad patterns in the contemporary dissemination of Platonic research.
 - It helps to quantify global trends in academic publishing and to visualize key features of Platonic scholarship.
 - Scopus also facilitates a macroscopic, data-driven approach to the field of Plato studies.
 
-## The dataset
+## 4. The dataset
 
 - This research draws on about 7,500 publications indexed in Scopus that include Plato as a subject (based on title or key words).
 - It was collected using programmatic tools in R — specifically the `{rscopus}`, `{rcrossref}`, `{openalexR}` packages and LLM via `{ellmer}`.
 - Dataset includes data on authorship, national affiliation and information on publishers, including their location.
 
 
-## A Preview of the Dataset
+## 5. A Preview of the Dataset
 
 ```{r}
 library(gt)
@@ -65,7 +65,7 @@ plato_pub_ed |>
 ```
 
 
-## Nr. of Publications on Plato in Scopus
+## 6. Number of Publications on Plato by Year
 
 
 ```{r}
@@ -84,7 +84,7 @@ plato_pub_ed |>
 - The number of publications appears to peak between 1990 and 2010, with annual publication counts exceeding 400 in some years.
 :::
 
-## Top Affiliation Countries 
+## 7. Number of Publications on Plato by Country
 
 
 ```{r}
@@ -95,9 +95,8 @@ plato_pub_ed |>
 
 ```
 
-# Part I: Texts and Scholars 
 
-## What are the most cited publications?
+## 8. What are the most cited publications?
 
 ```{r}
 plato_pub_ed |> 
@@ -117,13 +116,13 @@ plato_pub_ed |>
 
 :::
 
-## What about journal articles? 
+## 9. What about journal articles? 
 
 ```{r}
 plato_pub_ed |> 
   arrange(-cited_by_count) |>  
   filter(subtype == "ar" & publisher != "BMJ") |>   # remove a medical publication
-  slice_head(n = 10) |> 
+  slice_head(n = 100) |> 
   select(-issn, -eIssn, -volume, -issue, -page_range, -doi, -subtype) |> 
   mutate(id = paste(creator, title), .before = publicationName) |> 
   select(-title, -creator, affiliation_city, affiliation_country, -aggregation_type)
@@ -136,7 +135,7 @@ plato_pub_ed |>
 
 :::
 
-## Who are the most cited authors (books excluded) ?
+## 10. Who are the most cited authors (books excluded) ?
 
 ```{r}
 plato_pub_ed |> 
@@ -148,7 +147,7 @@ plato_pub_ed |>
   slice_head(n = 10)
 ```
 
-## Top 10 Institutions by Total Citations of Plato Journal Articles
+## 11. Top 10 Institutions by Total Citations of Plato Journal Articles
 
 ```{r}
 plato_pub_ed |> 
@@ -171,26 +170,99 @@ plato_pub_ed |>
   )
 ```
 
-## International Participation over Time
+## 12. International Participation over Time
 
-![](plato_publications.mp4)
+![](./videos/plato_publications.mp4)
 
-## International Citation over Time
+## 13. International Citation over Time
 
-## Part I: Conclusions
+![](./videos/plato_citations.mp4)
+
+## 14. Conclusion: Affiliaiton Trends
 
 - In recent years, there has been a noticeable rise in the number of authors listing affiliations with the Global South and Russia, moving beyond the traditional dominance of Europe and the USA.
 
 - In terms of visibility and citation impact, these affiliations still lag behind traditional centers such as Oxford and Harvard; however, this trend is gradually changing.
 
 
-# Part II: Journals
+## 15. Top 10 Journals by Number of Publications on Plato
 
-## Part II: Conclusions
+```{r}
+plato_pub_ed |> 
+  filter(aggregation_type == "Journal") |> 
+  count(publicationName, publisher_country) |> 
+  arrange(-n) |> 
+  slice_head(n = 10) |> 
+  ggplot(aes(reorder(publicationName, n), n, fill = publicationName)) +
+  geom_col(show.legend = FALSE) +
+  scale_fill_viridis_d() +
+  coord_flip() +
+  labs(x = NULL, y = NULL, title = "Top 10 Journals by Number of Publications")
+```
 
-# Part III: Publishers
+## 16. Top 10 Journals by Number of Citations
 
-## Part III: Perspectives
+```{r message=FALSE}
+plato_pub_ed |> 
+  filter(aggregation_type == "Journal") |> 
+  group_by(publicationName, publisher_country) |> 
+  summarise(total_cited = sum(as.numeric(cited_by_count))) |> 
+  ungroup() |> 
+  arrange(-total_cited) |> 
+  slice_max(total_cited, n = 10) |> 
+  ggplot(aes(reorder(publicationName, total_cited), total_cited, fill = publicationName)) +
+  geom_col(show.legend = FALSE) +
+  scale_fill_viridis_d() +
+  coord_flip() +
+  labs(x = NULL, y = NULL, title = "Top 10 Journals by Number of Citations")
+  
+```
+
+##  17. Conclusion: Citation Trends
+
+- Over the past decade, newly established Russian journals -- _Platonic Investigations_ (founded 2014) and _ΣΧΟΛΗ_ (founded 2007) -- have actively pursued Scopus indexing policies, successfully entering international databases.
+
+- This strategic approach has resulted in a substantial increase in indexed publications on Plato studies, positioning these journals as significant contributors to the global discourse on ancient philosophy within the Scopus ecosystem.
+
+- While these Russian journals have yet to match the citation metrics of established Western publications like _Phronesis_ or _Classical Quarterly_, there is demonstrable growth in citation patterns, particularly within domestic scholarly networks, indicating an emerging influence in international Platonic scholarship.
+
+## Feedback
+
+```{=html}
+<!-- Load Font Awesome (make sure this is in your HTML head) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<!-- Icon List -->
+<ul class="icon-list">
+  <li><i class="fab fa-telegram"></i> @locusclassicus </li>
+  <li><i class="fas fa-envelope"></i> alieva.mgl@gmail.com </li>
+  <li><i class="fab fa-github"></i> github.com/locusclassicus </li>
+  <li><i class="fas fa-graduation-cap"></i> hse-ru.academia.edu/OlgaAlieva</li>
+</ul>
+
+<!-- Optional CSS for styling -->
+<style>
+  .icon-list {
+    list-style: none;
+    padding: 0;
+    margin: 1em 0;
+  }
+
+  .icon-list li {
+    margin: 0.5em 0;
+    font-size: 1.2em;
+    display: flex;
+    align-items: center;
+  }
+
+  .icon-list i {
+    margin-right: 0.5em;
+    color:  #107895;
+    width: 1.2em;
+    text-align: center;
+  }
+</style>
+```
 
 
 
