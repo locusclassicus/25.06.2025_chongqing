@@ -178,7 +178,7 @@ plato_pub_ed |>
 
 ![](./videos/plato_citations.mp4)
 
-## 14. Conclusion: Affiliaiton Trends
+## 14. Conclusion: Affiliation Trends
 
 - In recent years, there has been a noticeable rise in the number of authors listing affiliations with the Global South and Russia, moving beyond the traditional dominance of Europe and the USA.
 
