@@ -58,10 +58,17 @@ plato_pub_ed <- plato_pub_ed |>
   rename(publisher_country = country) |> 
   mutate(cited_by_count = as.numeric(cited_by_count))
 
-set.seed(123)
 plato_pub_ed |> 
-  sample_n(size = 10) |> 
-  gt()
+  filter(str_detect(creator, "Balla |Cornelli |Wei L.|Mársico |Notomi|Arruzza")) |> 
+  group_by(creator) |> 
+  slice_sample(n = 1) |> 
+  arrange(-cited_by_count) |> 
+  mutate(title = str_trunc(title, width = 50)) |>
+  relocate(creator, .before = title) |> 
+  select(-doi, -eIssn) |> 
+  gt(groupname_col = NULL
+     ) |> 
+  cols_width(creator ~ px(250)) 
 ```
 
 
@@ -178,7 +185,7 @@ plato_pub_ed |>
 
 ![](./videos/plato_citations.mp4)
 
-## 14. Conclusion: Affiliation Trends
+## 14. Affiliation Trends
 
 - In recent years, there has been a noticeable rise in the number of authors listing affiliations with the Global South and Russia, moving beyond the traditional dominance of Europe and the USA.
 
@@ -215,16 +222,54 @@ plato_pub_ed |>
   scale_fill_viridis_d() +
   coord_flip() +
   labs(x = NULL, y = NULL, title = "Top 10 Journals by Number of Citations")
-  
 ```
 
-##  17. Conclusion: Citation Trends
+##  17. Citation Trends
 
 - Over the past decade, newly established Russian journals -- _Platonic Investigations_ (founded 2014) and _ΣΧΟΛΗ_ (founded 2007) -- have actively pursued Scopus indexing policies, successfully entering international databases.
 
 - This strategic approach has resulted in a substantial increase in indexed publications on Plato studies, positioning these journals as significant contributors to the global discourse on ancient philosophy within the Scopus ecosystem.
 
 - While these Russian journals have yet to match the citation metrics of established Western publications like _Phronesis_ or _Classical Quarterly_, there is demonstrable growth in citation patterns, particularly within domestic scholarly networks, indicating an emerging influence in international Platonic scholarship.
+
+## 18. Proportion of Domestic vs. International Publishing
+
+```{r}
+load("./data/at_home_summary.Rdata")
+p1 <- at_home_summary |> 
+  arrange(-at_home_ratio) |> 
+  slice_head(n = 15) |> 
+  ggplot(aes(reorder(affiliation_country, at_home), at_home, 
+             fill = affiliation_country)) +
+  geom_col(show.legend = FALSE) +
+  geom_text(aes(label = paste0(round(at_home_ratio*100, 1), "%")),
+            col = "grey30", 
+            nudge_y = 15,
+            size = 3
+            ) +
+  coord_flip() +
+  scale_fill_viridis_d("") +
+  labs(x = NULL, y = NULL, title = "At Home") 
+
+p2 <- at_home_summary |> 
+  arrange(-not_at_home_ratio) |> 
+  slice_head(n = 15) |> 
+  ggplot(aes(reorder(affiliation_country, not_at_home), not_at_home, 
+             fill = affiliation_country)) +
+  geom_col(show.legend = FALSE) +
+  geom_text(aes(label = paste0(round(not_at_home_ratio*100, 1), "%")),
+            col = "grey30", 
+            nudge_y = 5,
+            size = 3
+  ) +
+  coord_flip() +
+  scale_fill_viridis_d("") +
+  labs(x = NULL, y = NULL, title = "Abroad") 
+
+library(gridExtra)
+grid.arrange(p1, p2, 
+            ncol = 2)
+```
 
 ## Feedback
 
