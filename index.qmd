@@ -18,6 +18,10 @@ library(ggplot2)
 theme_set(theme_minimal())
 ```
 
+## Link to the Presentation
+
+![](./images/qr-code-bee-is.svg)
+
 ## 1. What's this all about
 
 - This paper presents an exploratory analysis of the global distribution and publication trends in Platonic scholarship
