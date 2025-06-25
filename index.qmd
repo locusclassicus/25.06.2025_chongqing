@@ -2,7 +2,7 @@
 title: "Mapping Platonic Scholarship in Scopus"
 subtitle: "A Bird’s-Eye View"
 author: Olga Alieva
-date: 2025-06-25
+date: 2025-06-26
 lang: en
 format: 
   clean-revealjs:
