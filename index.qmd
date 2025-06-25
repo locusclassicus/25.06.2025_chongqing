@@ -20,7 +20,7 @@ theme_set(theme_minimal())
 
 ## Link to the Presentation
 
-![](./images/qr-code-bee-is.svg)
+![](./images/frame.png)
 
 ## 1. What's this all about
 
